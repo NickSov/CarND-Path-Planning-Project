@@ -5,8 +5,6 @@
 #include <string>
 #include <vector>
 #include "Eigen/Dense"
-//#include "Eigen-3.3/Eigen/Core"
-//#include "Eigen-3.3/Eigen/QR"
 
 // for convenience
 using std::string;
@@ -87,6 +85,63 @@ int NextWaypoint(double x, double y, double theta, const vector<double> &maps_x,
 
   return closestWaypoint;
 }
+
+// Change lane function
+
+double laneInD = 2+4*lane; //lane in relation to d axis
+double centerLaneInD = 2+4*1; //lane in relation to d axis
+double leftLaneInD = 2+4*0; //left lane in relation to d axis
+double rightLaneInD = 2+4*2; //right lane in relation to d axis
+
+bool ConsiderLaneChange(int tooCloseCtr, int laneChangeOption, double leftLaneInD, double spaceLeftLane,
+     double rightLaneInD, double centerLaneInD, double laneInD, vector<vector<double>> sensFusVect){
+
+  // laneChangeOption 1 = left lane change
+  // laneChangeOption 2 = right lane changeLanes
+
+  bool changeLanes = false;
+  double laneID;
+  double distNearVeh;
+  double distDiff;
+  double numVehClearCt = 0;
+  vector<vector<double>> vehInLanes;
+
+  // left lane change if starting in center lane
+  if(laneInD == centerLaneInD && laneChangeOption == 1){
+    laneID = leftLaneInD;
+  } else if(laneInD == rightLaneInD){
+    laneID = centerLaneInD;
+  } else if (laneInD == centerLaneInD && laneChangeOption == 0){
+    laneID = rightLaneInD;
+  } else if(laneInD == leftLaneID){
+    laneID = centerLaneInD;
+  }
+
+  for (int i=0; i<sensFusVect.size(); i++){
+      if(((sensor_fusion[i][6] < laneID + 0.5)
+      && (sensor_fusion[i][6] > laneID - 0.5))){
+        vehInLanes.push_back(sensor_fusion[i])
+        }
+    }
+
+    for (int i=0; i<vehInLanes.size(); i++){
+      distNearVeh = (double)vehInLanes[i][5];
+      distDiff = fabs(distNearVeh - car_s);
+      if(distDiff > spaceLeftLane){
+        numVehClearCt += 1;
+      }
+    }
+
+    if (vehInLanes.size() == numVehClearCt){
+      changeLanes = true;
+    }
+
+  return changeLanes;
+}
+
+
+
+
 
 // Jerk minimizing trajectory polynomial solver
 
