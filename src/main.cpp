@@ -117,12 +117,12 @@ int main() {
           double centerLane_d = 2+4*1; //lane in relation to d axis
           double leftLane_d = 2+4*0; //left lane in relation to d axis
           double rightLane_d = 2+4*2; //right lane in relation to d axis
-          double followDist = 30; // 10 meter following distance
+          double followDist = 35; // 10 meter following distance
           double distDiff = 0; // difference between ego vehicle and next vehicle in ego lane
           double velFrVeh = 0; // front ego lane vehicle velocity, mph
           double distDiffT1 = 0;
           double distDiffT2;
-          double laneChgSpaceMin = 30;
+          double laneChgSpaceMin = 40;
           double vehID;
           double prevLaneRq; // previous lane request
           bool tooClose = false; // flag for whether the vehicle is too close
@@ -194,19 +194,15 @@ int main() {
               laneChangeOption = 1;
               consdResult = ConsiderLaneChange(car_s,laneChangeOption,laneChgSpaceMin,
                           leftLane_d, rightLane_d, centerLane_d, sensFusVect);
-            } else if (lane == 1 && tryRight == false){
+            } else if (lane == 1){
               laneChangeOption = 0; // first checking if merging possible to left lane
               consdResult = ConsiderLaneChange(car_s,laneChangeOption,laneChgSpaceMin,
                           leftLane_d, rightLane_d, centerLane_d, sensFusVect);
-              std::cout << "consdResult: " << consdResult << std::endl;
               if(consdResult == false){
-                tryRight = true;
+                laneChangeOption = 2; // second checking if merging possible to right lane
+                consdResult = ConsiderLaneChange(car_s,laneChangeOption,laneChgSpaceMin,
+                            leftLane_d, rightLane_d, centerLane_d, sensFusVect);
               }
-              std::cout << "tryRight: " << tryRight << std::endl;
-            } else if (lane == 1 && tryRight == true)  {
-              laneChangeOption = 2; // second checking if merging possible to right lane
-              consdResult = ConsiderLaneChange(car_s,laneChangeOption,laneChgSpaceMin,
-                          leftLane_d, rightLane_d, centerLane_d, sensFusVect);
             } else {
               consdResult = false;
             }
@@ -214,23 +210,23 @@ int main() {
             consdResult = false;
           }
 
-          std::cout << "tooCloseCtr: " << tooCloseCtr << std::endl;
+          //std::cout << "tooCloseCtr: " << tooCloseCtr << std::endl;
 
           // Execute lane change
 
-          if(lane == 0 && consdResult == true && tooCloseCtr == ctrVal){
+          if(lane == 0 && consdResult == true && tooCloseCtr > ctrVal){
             std::cout << "Change from left to center" << std::endl;
             lane = 1;
             tooCloseCtr = 0;
-          } else if (lane == 2 && consdResult == true && tooCloseCtr == ctrVal){
+          } else if (lane == 2 && consdResult == true && tooCloseCtr > ctrVal){
             std::cout << "Change from right to center" << std::endl;
             lane = 1;
             tooCloseCtr = 0;
-          } else if (lane == 1 && consdResult == true && tryRight == false && tooCloseCtr == ctrVal){
+          } else if (lane == 1 && consdResult == true && tryRight == false && tooCloseCtr > ctrVal){
             std::cout << "Change from center to left" << std::endl;
             lane = 0;
             tooCloseCtr = 0;
-          } else if (lane == 1 && consdResult == true && tryRight == true && tooCloseCtr == ctrVal)  {
+          } else if (lane == 1 && consdResult == true && tryRight == true && tooCloseCtr > ctrVal)  {
             std::cout << "Change from center to right" << std::endl;
             lane = 2;
             tooCloseCtr = 0;

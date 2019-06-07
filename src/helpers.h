@@ -111,22 +111,22 @@ bool ConsiderLaneChange(double car_s, int laneChangeOption, double laneChgSpaceM
     laneID = rightLane_d; //from center lane, check right lane for merging potential
   }
 
-  std::cout << "laneChangeOption: " << laneChangeOption << std::endl;
+  //std::cout << "laneChangeOption: " << laneChangeOption << std::endl;
 
-  std::cout << " ---------------------------- " << std::endl;
+  //std::cout << " ---------------------------- " << std::endl;
 
   for (int i=0; i<sensFusVect.size(); i++){
       if(((sensFusVect[i][6] < laneID + 0.5)
       && (sensFusVect[i][6] > laneID - 0.5))){
         vehInLanes.push_back(sensFusVect[i]);
-        std::cout << "vehicle in lane: " << laneID << " | location: " << sensFusVect[i][6]<< std::endl;
+        //std::cout << "vehicle in lane: " << laneID << " | location: " << sensFusVect[i][6]<< std::endl;
         }
     }
 
   for (int i=0; i<vehInLanes.size(); i++){
     distNearVeh = (double)vehInLanes[i][5];
     distDiff = fabs(distNearVeh - car_s);
-    std::cout << "distDiff: " << distDiff << std::endl;
+    //std::cout << "distDiff: " << distDiff << std::endl;
 
     if(distDiff > laneChgSpaceMin){
       numVehClearCt += 1;
@@ -135,9 +135,10 @@ bool ConsiderLaneChange(double car_s, int laneChangeOption, double laneChgSpaceM
 
   if (vehInLanes.size() == numVehClearCt){
     changeLanes = true;
-    std::cout << " -------------- TRUE -------------- " << std::endl;
+    // include truth counter in order to verify that the lane change really is OK
+    //std::cout << " -------------- TRUE -------------- " << std::endl;
   } else {
-    std::cout << " ---------------------------- " << std::endl;
+    //std::cout << " ---------------------------- " << std::endl;
   }
 
   return changeLanes;
