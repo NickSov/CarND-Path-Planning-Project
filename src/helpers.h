@@ -88,16 +88,12 @@ int NextWaypoint(double x, double y, double theta, const vector<double> &maps_x,
 
 // Change lane function
 
-double laneInD = 2+4*lane; //lane in relation to d axis
-double centerLaneInD = 2+4*1; //lane in relation to d axis
-double leftLaneInD = 2+4*0; //left lane in relation to d axis
-double rightLaneInD = 2+4*2; //right lane in relation to d axis
+bool ConsiderLaneChange(double car_s, int laneChangeOption, double laneChgSpaceMin, double leftLane_d,
+     double rightLane_d, double centerLane_d, vector<vector<double>> sensFusVect){
 
-bool ConsiderLaneChange(int tooCloseCtr, int laneChangeOption, double leftLaneInD, double spaceLeftLane,
-     double rightLaneInD, double centerLaneInD, double laneInD, vector<vector<double>> sensFusVect){
-
-  // laneChangeOption 1 = left lane change
-  // laneChangeOption 2 = right lane changeLanes
+  // laneChangeOption 0 = left lane change
+  // laneChangeOption 1 = center lane change
+  // laneChangeOption 2 = right lane change
 
   bool changeLanes = false;
   double laneID;
@@ -107,41 +103,45 @@ bool ConsiderLaneChange(int tooCloseCtr, int laneChangeOption, double leftLaneIn
   vector<vector<double>> vehInLanes;
 
   // left lane change if starting in center lane
-  if(laneInD == centerLaneInD && laneChangeOption == 1){
-    laneID = leftLaneInD;
-  } else if(laneInD == rightLaneInD){
-    laneID = centerLaneInD;
-  } else if (laneInD == centerLaneInD && laneChangeOption == 0){
-    laneID = rightLaneInD;
-  } else if(laneInD == leftLaneID){
-    laneID = centerLaneInD;
+  if(laneChangeOption == 0){
+    laneID = leftLane_d; // from center lane, check left lane for merging potential
+  } else if(laneChangeOption == 1){
+    laneID = centerLane_d; //from left or righ lane, check center lane for merging potential
+  } else if (laneChangeOption == 2){
+    laneID = rightLane_d; //from center lane, check right lane for merging potential
   }
 
+  std::cout << "laneChangeOption: " << laneChangeOption << std::endl;
+
+  std::cout << " ---------------------------- " << std::endl;
+
   for (int i=0; i<sensFusVect.size(); i++){
-      if(((sensor_fusion[i][6] < laneID + 0.5)
-      && (sensor_fusion[i][6] > laneID - 0.5))){
-        vehInLanes.push_back(sensor_fusion[i])
+      if(((sensFusVect[i][6] < laneID + 0.5)
+      && (sensFusVect[i][6] > laneID - 0.5))){
+        vehInLanes.push_back(sensFusVect[i]);
+        std::cout << "vehicle in lane: " << laneID << " | location: " << sensFusVect[i][6]<< std::endl;
         }
     }
 
-    for (int i=0; i<vehInLanes.size(); i++){
-      distNearVeh = (double)vehInLanes[i][5];
-      distDiff = fabs(distNearVeh - car_s);
-      if(distDiff > spaceLeftLane){
-        numVehClearCt += 1;
-      }
-    }
+  for (int i=0; i<vehInLanes.size(); i++){
+    distNearVeh = (double)vehInLanes[i][5];
+    distDiff = fabs(distNearVeh - car_s);
+    std::cout << "distDiff: " << distDiff << std::endl;
 
-    if (vehInLanes.size() == numVehClearCt){
-      changeLanes = true;
+    if(distDiff > laneChgSpaceMin){
+      numVehClearCt += 1;
     }
+  }
+
+  if (vehInLanes.size() == numVehClearCt){
+    changeLanes = true;
+    std::cout << " -------------- TRUE -------------- " << std::endl;
+  } else {
+    std::cout << " ---------------------------- " << std::endl;
+  }
 
   return changeLanes;
 }
-
-
-
-
 
 // Jerk minimizing trajectory polynomial solver
 

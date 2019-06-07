@@ -65,9 +65,13 @@ int main() {
 
   // Determine lane change need
 
-  int tooCloseCtr = 0; //too close counter - counts off how many times too close has been True
+  int tooCloseCtr = 0;
+  int ctrVal = 200;
 
-  h.onMessage([&tooCloseCtr, &refVel, &lane, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
+  bool consdResult = false;
+  bool tryRight = false;
+
+  h.onMessage([&consdResult,&tryRight, &ctrVal,&tooCloseCtr, &refVel, &lane, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
                &map_waypoints_dx,&map_waypoints_dy]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                uWS::OpCode opCode) {
@@ -110,24 +114,26 @@ int main() {
           // }
 
           double laneInD = 2+4*lane; //lane in relation to d axis
-          double centerLaneInD = 2+4*1; //lane in relation to d axis
-          double leftLaneInD = 2+4*0; //left lane in relation to d axis
-          double rightLaneInD = 2+4*2; //right lane in relation to d axis
-          double followDist = 35; // 10 meter following distance
+          double centerLane_d = 2+4*1; //lane in relation to d axis
+          double leftLane_d = 2+4*0; //left lane in relation to d axis
+          double rightLane_d = 2+4*2; //right lane in relation to d axis
+          double followDist = 30; // 10 meter following distance
           double distDiff = 0; // difference between ego vehicle and next vehicle in ego lane
           double velFrVeh = 0; // front ego lane vehicle velocity, mph
           double distDiffT1 = 0;
           double distDiffT2;
+          double laneChgSpaceMin = 30;
           double vehID;
-          double lowestSpeed; //lowest speed recorded for the ego lane vehicle, m/s
-          double lowestSpeedPrev; // previous lowest speed recorded for the ego lane vehicle, m/s
+          double prevLaneRq; // previous lane request
           bool tooClose = false; // flag for whether the vehicle is too close
+          bool vehAhead = false; // veh ahead indicator, true if slowing down.
 
+          prevLaneRq = lane;
 
           // check on other cars in front and slow down to necessary speed
 
           for(int i=0; i<sensor_fusion.size(); i++){
-            if ((sensor_fusion[i][6] < laneInD + 0.5) && (sensor_fusion[i][6] > laneInD - 0.5)){
+            if ((sensor_fusion[i][6] < laneInD + 1) && (sensor_fusion[i][6] > laneInD - 1)){
               double disNextVeh = (double)sensor_fusion[i][5];
               distDiff = disNextVeh - car_s;
               //std::cout << "car is : "<< distDiff << " m away" << std::endl;
@@ -137,7 +143,7 @@ int main() {
                 velFrVeh = 2.24 * sqrt(pow((double)sensor_fusion[i][3],2) + pow((double)sensor_fusion[i][4],2));
                 // std::cout << "Front vehicle speed (mph) : "<< velFrVeh << std::endl;
                 tooClose = true;
-                tooCloseCtr = 1;
+                tooCloseCtr += 1;
               }
             }
           }
@@ -150,6 +156,7 @@ int main() {
           if(tooClose && car_speed > velFrVeh){
             //std::cout << "Phase 1 " << std::endl;
             refVel -= 0.224; //-.224
+            std::cout << "slowing down... " << std::endl;
             // decrease to speed of front vehicle
           } else if (refVel < 49.5){
             refVel += 0.200;
@@ -159,6 +166,7 @@ int main() {
 
           vector<vector<double>> sensFusVect;
           vector<double> tempVect;
+          int laneChangeOption;
 
           for(int i=0; i<sensor_fusion.size(); i++){
             for (int j=0; j<7; j++){
@@ -171,18 +179,64 @@ int main() {
           // std::cout << sensFusVect[0][0] << sensFusVect[0][6] << std::endl;
           // std::cout << sensFusVect[6][0] << sensFusVect[6][6] << std::endl;
 
+          // laneChangeOption 0 = check if lane change is possible to left lane
+          // laneChangeOption 1 = check if lane change is possible to center lane
+          // laneChangeOption 2 = check if lane change is possible to right lane
 
-          bool test = ConsiderLaneChange(tooCloseCtr, sensFusVect);
+          // check for lane change
 
-          std::cout << test << std::endl;
+          if (tooClose == true){
+            if(lane == 0){
+              laneChangeOption = 1;
+              consdResult = ConsiderLaneChange(car_s,laneChangeOption,laneChgSpaceMin,
+                          leftLane_d, rightLane_d, centerLane_d, sensFusVect);
+            } else if (lane == 2){
+              laneChangeOption = 1;
+              consdResult = ConsiderLaneChange(car_s,laneChangeOption,laneChgSpaceMin,
+                          leftLane_d, rightLane_d, centerLane_d, sensFusVect);
+            } else if (lane == 1 && tryRight == false){
+              laneChangeOption = 0; // first checking if merging possible to left lane
+              consdResult = ConsiderLaneChange(car_s,laneChangeOption,laneChgSpaceMin,
+                          leftLane_d, rightLane_d, centerLane_d, sensFusVect);
+              std::cout << "consdResult: " << consdResult << std::endl;
+              if(consdResult == false){
+                tryRight = true;
+              }
+              std::cout << "tryRight: " << tryRight << std::endl;
+            } else if (lane == 1 && tryRight == true)  {
+              laneChangeOption = 2; // second checking if merging possible to right lane
+              consdResult = ConsiderLaneChange(car_s,laneChangeOption,laneChgSpaceMin,
+                          leftLane_d, rightLane_d, centerLane_d, sensFusVect);
+            } else {
+              consdResult = false;
+            }
+          } else {
+            consdResult = false;
+          }
 
+          std::cout << "tooCloseCtr: " << tooCloseCtr << std::endl;
 
+          // Execute lane change
 
-
-
-
-
-
+          if(lane == 0 && consdResult == true && tooCloseCtr == ctrVal){
+            std::cout << "Change from left to center" << std::endl;
+            lane = 1;
+            tooCloseCtr = 0;
+          } else if (lane == 2 && consdResult == true && tooCloseCtr == ctrVal){
+            std::cout << "Change from right to center" << std::endl;
+            lane = 1;
+            tooCloseCtr = 0;
+          } else if (lane == 1 && consdResult == true && tryRight == false && tooCloseCtr == ctrVal){
+            std::cout << "Change from center to left" << std::endl;
+            lane = 0;
+            tooCloseCtr = 0;
+          } else if (lane == 1 && consdResult == true && tryRight == true && tooCloseCtr == ctrVal)  {
+            std::cout << "Change from center to right" << std::endl;
+            lane = 2;
+            tooCloseCtr = 0;
+          } else {
+            lane = prevLaneRq;
+          }
 
           //
           // //std::cout << "Too close iteration : "<< tooCloseCtr << std::endl;
