@@ -114,57 +114,34 @@ bool ConsiderLaneChange(double car_s, double car_speed, int laneChangeOption, do
     laneID = rightLane_d; //from center lane, check right lane for merging potential
   }
 
-  //std::cout << "laneChangeOption: " << laneChangeOption << std::endl;
-
-  std::cout << " ---------------------------- " << std::endl;
-
   for (int i=0; i<sensFusVect.size(); i++){
-      if(((sensFusVect[i][6] < laneID + 1)
-      && (sensFusVect[i][6] > laneID - 1))){
+      if(((sensFusVect[i][6] < laneID + 1.5)
+      && (sensFusVect[i][6] > laneID - 1.5))){
         vehInLanes.push_back(sensFusVect[i]);
-        std::cout << "vehicle in lane: " << laneID << " | location: " << sensFusVect[i][6]<< std::endl;
         }
     }
-    //
-    // std::cout << "laneChgSpaceMinBck: " << laneChgSpaceMinBck << std::endl;
-    // std::cout << "laneChgSpaceMinFrt: " << laneChgSpaceMinFrt << std::endl;
 
   for (int i=0; i<vehInLanes.size(); i++){
     distNearVeh = (double)vehInLanes[i][5];
-    std::cout << "distNearVeh: " << distNearVeh << std::endl;
-    std::cout << "car_s: " << car_s << std::endl;
     if ((distNearVeh - car_s) < 0){
       distDiffBack = fabs(distNearVeh - car_s);
-      std::cout << "distDiffBack: " << distDiffBack << std::endl;
     } else if ((distNearVeh - car_s) >= 0) {
       distDiffFront = fabs(distNearVeh - car_s);
-      std::cout << "distDiffFront: " << distDiffFront << std::endl;
     }
 
     velFrVeh = 2.24 * sqrt(pow((double)vehInLanes[i][3],2) + pow((double)vehInLanes[i][4],2));
-    // std::cout << "velFrVeh: " << velFrVeh << std::endl;
-    // std::cout << "car_speed: " << car_speed << std::endl;
 
-    if(distDiffBack > laneChgSpaceMinBck){
+    if(distDiffBack > laneChgSpaceMinBck || (velFrVeh - 5 <= car_speed
+       && distDiffBack > (laneChgSpaceMinBck-20))){
       numVehClearCt += 1;
     }
-    if(distDiffFront > laneChgSpaceMinFrt && velFrVeh > car_speed ){
+    if(distDiffFront > laneChgSpaceMinFrt && velFrVeh + 5 > car_speed ){
       numVehClearCt += 1;
     }
-
-    std::cout << "numVehClearCt: " << numVehClearCt << std::endl;
   }
-
-
 
   if (vehInLanes.size() == numVehClearCt){
     changeLanes = true;
-  }
-
-  if (changeLanes == true){
-    std::cout << " -------------- TRUE -------------- " << std::endl;
-  } else {
-    std::cout << " /////////////////////////////////" << std::endl;
   }
 
   return changeLanes;
