@@ -88,8 +88,9 @@ int NextWaypoint(double x, double y, double theta, const vector<double> &maps_x,
 
 // Change lane function
 
-bool ConsiderLaneChange(double car_s, int laneChangeOption, double laneChgSpaceMin, double leftLane_d,
-     double rightLane_d, double centerLane_d, vector<vector<double>> sensFusVect){
+bool ConsiderLaneChange(double car_s, double car_speed, int laneChangeOption, double laneChgSpaceMinFrt,
+                        double laneChgSpaceMinBck, double leftLane_d, double rightLane_d,
+                        double centerLane_d, vector<vector<double>> sensFusVect){
 
   // laneChangeOption 0 = left lane change
   // laneChangeOption 1 = center lane change
@@ -98,8 +99,10 @@ bool ConsiderLaneChange(double car_s, int laneChangeOption, double laneChgSpaceM
   bool changeLanes = false;
   double laneID;
   double distNearVeh;
-  double distDiff;
+  double distDiffBack = 0;
+  double distDiffFront = 0;
   double numVehClearCt = 0;
+  double velFrVeh;
   vector<vector<double>> vehInLanes;
 
   // left lane change if starting in center lane
@@ -113,32 +116,55 @@ bool ConsiderLaneChange(double car_s, int laneChangeOption, double laneChgSpaceM
 
   //std::cout << "laneChangeOption: " << laneChangeOption << std::endl;
 
-  //std::cout << " ---------------------------- " << std::endl;
+  std::cout << " ---------------------------- " << std::endl;
 
   for (int i=0; i<sensFusVect.size(); i++){
-      if(((sensFusVect[i][6] < laneID + 0.5)
-      && (sensFusVect[i][6] > laneID - 0.5))){
+      if(((sensFusVect[i][6] < laneID + 1)
+      && (sensFusVect[i][6] > laneID - 1))){
         vehInLanes.push_back(sensFusVect[i]);
-        //std::cout << "vehicle in lane: " << laneID << " | location: " << sensFusVect[i][6]<< std::endl;
+        std::cout << "vehicle in lane: " << laneID << " | location: " << sensFusVect[i][6]<< std::endl;
         }
     }
+    //
+    // std::cout << "laneChgSpaceMinBck: " << laneChgSpaceMinBck << std::endl;
+    // std::cout << "laneChgSpaceMinFrt: " << laneChgSpaceMinFrt << std::endl;
 
   for (int i=0; i<vehInLanes.size(); i++){
     distNearVeh = (double)vehInLanes[i][5];
-    distDiff = fabs(distNearVeh - car_s);
-    //std::cout << "distDiff: " << distDiff << std::endl;
+    std::cout << "distNearVeh: " << distNearVeh << std::endl;
+    std::cout << "car_s: " << car_s << std::endl;
+    if ((distNearVeh - car_s) < 0){
+      distDiffBack = fabs(distNearVeh - car_s);
+      std::cout << "distDiffBack: " << distDiffBack << std::endl;
+    } else if ((distNearVeh - car_s) >= 0) {
+      distDiffFront = fabs(distNearVeh - car_s);
+      std::cout << "distDiffFront: " << distDiffFront << std::endl;
+    }
 
-    if(distDiff > laneChgSpaceMin){
+    velFrVeh = 2.24 * sqrt(pow((double)vehInLanes[i][3],2) + pow((double)vehInLanes[i][4],2));
+    // std::cout << "velFrVeh: " << velFrVeh << std::endl;
+    // std::cout << "car_speed: " << car_speed << std::endl;
+
+    if(distDiffBack > laneChgSpaceMinBck){
       numVehClearCt += 1;
     }
+    if(distDiffFront > laneChgSpaceMinFrt && velFrVeh > car_speed ){
+      numVehClearCt += 1;
+    }
+
+    std::cout << "numVehClearCt: " << numVehClearCt << std::endl;
   }
+
+
 
   if (vehInLanes.size() == numVehClearCt){
     changeLanes = true;
-    // include truth counter in order to verify that the lane change really is OK
-    //std::cout << " -------------- TRUE -------------- " << std::endl;
+  }
+
+  if (changeLanes == true){
+    std::cout << " -------------- TRUE -------------- " << std::endl;
   } else {
-    //std::cout << " ---------------------------- " << std::endl;
+    std::cout << " /////////////////////////////////" << std::endl;
   }
 
   return changeLanes;
