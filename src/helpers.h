@@ -86,7 +86,7 @@ int NextWaypoint(double x, double y, double theta, const vector<double> &maps_x,
   return closestWaypoint;
 }
 
-// Change lane function
+// Consider Lane Change
 
 bool ConsiderLaneChange(double car_s, double car_speed, int laneChangeOption, double laneChgSpaceMinFrt,
                         double laneChgSpaceMinBck, double leftLane_d, double rightLane_d,
@@ -125,14 +125,16 @@ bool ConsiderLaneChange(double car_s, double car_speed, int laneChangeOption, do
     distNearVeh = (double)vehInLanes[i][5];
     if ((distNearVeh - car_s) < 0){
       distDiffBack = fabs(distNearVeh - car_s);
+      distDiffFront = 0;
     } else if ((distNearVeh - car_s) >= 0) {
       distDiffFront = fabs(distNearVeh - car_s);
+      distDiffBack = 0;
     }
 
     velFrVeh = 2.24 * sqrt(pow((double)vehInLanes[i][3],2) + pow((double)vehInLanes[i][4],2));
 
-    if(distDiffBack > laneChgSpaceMinBck || (velFrVeh - 5 <= car_speed
-       && distDiffBack > (laneChgSpaceMinBck-20))){
+    if(distDiffBack > laneChgSpaceMinBck || (velFrVeh <= car_speed
+       && distDiffBack > (laneChgSpaceMinBck-15))){
       numVehClearCt += 1;
     }
     if(distDiffFront > laneChgSpaceMinFrt && velFrVeh + 5 > car_speed ){

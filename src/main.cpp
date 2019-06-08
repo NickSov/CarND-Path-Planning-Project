@@ -61,7 +61,7 @@ int main() {
 
   // reference velocity
 
-  double refVel = 30; // in mph
+  double refVel = 0; // in mph
 
   // Determine lane change need
 
@@ -123,19 +123,17 @@ int main() {
           double followDist = 40; // 10 meter following distance
           double distDiff = 0; // difference between ego vehicle and next vehicle in ego lane
           double velFrVeh = 0; // front ego lane vehicle velocity, mph
-          double distDiffT1 = 0;
-          double distDiffT2;
-          double laneChgSpaceMinBck = 60;
-          double laneChgSpaceMinFrt = followDist + 10;
+          double laneChgSpaceMinBck = 40;
+          double laneChgSpaceMinFrt = followDist - 10;
           double vehID;
           double prevLaneRq; // previous lane request
           bool tooClose = false; // flag for whether the vehicle is too close
           bool vehAhead = false; // veh ahead indicator, true if slowing down.
-          int CLP = 5; //lane change paramenter, constraint on how many times lane change must be true
+          int CLP = 3; //lane change paramenter, constraint on how many times lane change must be true
 
           prevLaneRq = lane;
 
-          // check on other cars in front and slow down to necessary speed
+          // check on other cars in front and slow down to maintain safe following distance
 
           for(int i=0; i<sensor_fusion.size(); i++){
             if ((sensor_fusion[i][6] < laneInD + 1.5) && (sensor_fusion[i][6] > laneInD - 1.5)){
@@ -152,8 +150,6 @@ int main() {
 
           if(tooClose && car_speed > velFrVeh){
             refVel -= 0.224;
-            std::cout << "slowing down... " << std::endl;
-            // decrease to speed of front vehicle
           } else if (refVel < 49.5){
             refVel += 0.200;
           }
@@ -172,7 +168,7 @@ int main() {
             tempVect.clear();
           }
 
-          // check for lane change
+          // Check if lane change is possible
 
           if (tooClose == true){
             if(lane == 0){
@@ -250,13 +246,6 @@ int main() {
 
           json msgJson;
 
-          /**
-           * TODO: define a path made up of (x,y) points that the car will visit
-           *   sequentially every .02 seconds
-           */
-
-          // stay in lane
-
           int prevSize = previous_path_x.size();
 
           // widely spaced way points list
@@ -300,12 +289,11 @@ int main() {
 
             ptsy.push_back(refYPrevious);
             ptsy.push_back(ref_y);
-
           }
 
           // add spaced waypoints within Frenet coordinates
 
-          vector<double> wp1 = getXY(car_s+40,(laneInD),map_waypoints_s,map_waypoints_x,map_waypoints_y);
+          vector<double> wp1 = getXY(car_s+45,(laneInD),map_waypoints_s,map_waypoints_x,map_waypoints_y);
           vector<double> wp2 = getXY(car_s+70,(laneInD),map_waypoints_s,map_waypoints_x,map_waypoints_y);
           vector<double> wp3 = getXY(car_s+90,(laneInD),map_waypoints_s,map_waypoints_x,map_waypoints_y);
 
