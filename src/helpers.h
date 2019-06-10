@@ -86,7 +86,7 @@ int NextWaypoint(double x, double y, double theta, const vector<double> &maps_x,
   return closestWaypoint;
 }
 
-// Consider Lane Change
+// Consider Lane Change Function
 
 bool ConsiderLaneChange(double car_s, double car_speed, int laneChangeOption, double laneChgSpaceMinFrt,
                         double laneChgSpaceMinBck, double leftLane_d, double rightLane_d,
