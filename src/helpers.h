@@ -4,7 +4,7 @@
 #include <math.h>
 #include <string>
 #include <vector>
-#include "Eigen/Dense"
+#include "Eigen-3.3/Eigen/Dense"
 
 // for convenience
 using std::string;
