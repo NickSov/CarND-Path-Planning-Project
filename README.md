@@ -5,13 +5,13 @@
 At the center of this project is a simple finite state machine which governs the behavior of the vehicle. It manages when the vehicle should slow down, speed up, and change lanes. The vehicle does three main tasks:
 
 - It moves as fast as legally possible (~49.5 mph) whenever it can, i.e. no obstacles in the way
-- It slows down/speeds up in order to stay within a certain distance of obstacle, if one should be encountered
+- It slows down/speeds up in order to stay within a certain distance (40 m) of obstacle, if one should be encountered
 - After some time (7 seconds) after it follows the object, it considers a lane change
 - If the lane change seems safe, e.g. no collision will occur, the vehicle commences with a lane change maneuver.
 
 The finite state machine is shown in the chart below:
 
-<img src="https://github.com/NickSov/CarND-Path-Planning-Project/blob/master/images/flow_path_plan.png" width="700">
+<img src="https://github.com/NickSov/CarND-Path-Planning-Project/blob/master/images/flow_path_plan.png" width="750">
 
 
 ## Reflection on Path Generation
