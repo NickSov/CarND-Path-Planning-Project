@@ -11,7 +11,7 @@ At the center of this project is a simple finite state machine which governs the
 
 The finite state machine is shown in the chart below:
 
-<img src="https://github.com/NickSov/CarND-Path-Planning-Project/blob/master/images/flow_path_plan.png" width="400">
+<img src="https://github.com/NickSov/CarND-Path-Planning-Project/blob/master/images/flow_path_plan.png" width="700">
 
 
 ## Reflection on Path Generation
@@ -25,6 +25,6 @@ The first piece is explained in the Model Overview section above. The general de
 
 Part 2 above is more traditional trajectory generation, in which comfort was accounted for when generating a lane change or slowing down/speeding up the vehicle. For this portion, I used cubic spline interpolation library by Timo Kluge was used. The library is located at: (https://kluge.in-chemnitz.de/opensource/spline/). I experimented with the cubic library by creating some sample lane change points in Fernet coordinates and plotting them. The plotting of the various lane change scenarios allowed me to visualize how the spline library worked. For example, below is a plot I created of a lane change from *Lane 6* to *Lane 2*.
 
-<img src="https://github.com/NickSov/CarND-Path-Planning-Project/blob/master/images/spline_plot.png" width="280">
+<img src="https://github.com/NickSov/CarND-Path-Planning-Project/blob/master/images/spline_plot.png" width="700">
 
 I noticed that varying the s-distance at the intersection of when the lane change occurs, made a substantial difference in regards to how smooth the lane change was. This allows for more time/distance to pass between the change over, hence smoothing out the path.
